@@ -167,6 +167,32 @@ var gamepads={
 			_player = -1;
 		}
 		return this.getAxes(_axis,1,_player)[0];
+	},
+
+	// returns true if _axis is past _threshold in _direction
+	// if _direction isn't set, assumes the sign of _theshold is the direction (e.g. if the theshold is -0.5, it will check if _axis is < -0.5)
+	// if _player isn't set, returns true for any player
+	axisPast: function(_axis, _threshold, _direction, _player){
+		if(arguments.length < 4){
+			_player=-1;
+			if(arguments.length < 3){
+				_direction = Math.sign(_threshold);
+				if(arguments.length < 2){
+					console.error("must specify axis and threshold");
+				}
+			}
+		}
+
+		var a=this.getAxis(_axis,_player);
+
+
+
+		if(_direction < 0){
+			return a < _threshold;
+		}else if(_direction > 0){
+			return a > _threshold;
+		}else{
+			console.error("direction can't be zero");
 		}
 	},
 
