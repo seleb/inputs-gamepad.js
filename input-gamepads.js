@@ -16,6 +16,11 @@ var gamepads={
 	DPAD_LEFT:14,
 	DPAD_RIGHT:15,
 
+	LSTICK_H:0,
+	LSTICK_V:1,
+	RSTICK_H:2,
+	RSTICK_V:3,
+	
 	players:[],
 
 	available:false,
@@ -136,7 +141,7 @@ var gamepads={
 				}
 			}
 		}else{
-			var a=this.getPlayer(_player).axes.slice(_offset,_length);
+			var a=this.getPlayer(_player).axes.slice(_offset,_offset+_length);
 			for(var i=0;i<a.length;++i){
 				if(Math.abs(a[i]) < this.deadZone){
 					axes[i]+=0;
@@ -150,6 +155,14 @@ var gamepads={
 			}
 		}
 		return axes;
+	},
+	// returns getAxes(_axis,1,_player)[0]
+	getAxis: function(_axis,_player){
+		if(arguments.length < 2){
+			return this.getAxes(_axis,1)[0];
+		}else{
+			return this.getAxes(_axis,1,_player)[0];
+		}
 	},
 
 	// returns [x,y] representing the dpad for _player
