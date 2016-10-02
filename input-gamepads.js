@@ -161,11 +161,12 @@ var gamepads={
 		return axes;
 	},
 	// returns getAxes(_axis,1,_player)[0]
+	// if _player isn't set, returns the sum of everyone's axis
 	getAxis: function(_axis,_player){
 		if(arguments.length < 2){
-			return this.getAxes(_axis,1)[0];
-		}else{
-			return this.getAxes(_axis,1,_player)[0];
+			_player = -1;
+		}
+		return this.getAxes(_axis,1,_player)[0];
 		}
 	},
 
