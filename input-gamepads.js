@@ -1,4 +1,6 @@
 var gamepads={
+	// XBOX360 wired controller configuration
+	// buttons
 	A:0,
 	X:2,
 	B:1,
@@ -16,18 +18,20 @@ var gamepads={
 	DPAD_LEFT:14,
 	DPAD_RIGHT:15,
 
+	// axes
 	LSTICK_H:0,
 	LSTICK_V:1,
 	RSTICK_H:2,
 	RSTICK_V:3,
 	
+
 	players:[],
 
 	available:false,
 	pollEveryFrame:false,
 	connected:false,
-	deadZone:0.25,
-	snapZone:0.25,
+	deadZone:0.25,  // if abs(an axis value) is < deadZone, returns 0 instead
+	snapZone:0.25, // if abs(1-an axis value) is < snapZone, returns 1 instead
 
 	init:function(){
 		if(navigator.getGamepads){
