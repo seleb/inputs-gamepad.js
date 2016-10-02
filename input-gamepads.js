@@ -65,28 +65,37 @@ var gamepads={
     		var gp=gps[i];
     		if(gp){
 	    		if(gp.connected){
-	    			if(this.players[gp.index]==null){
+	    			if(this.players[gp.index] == null){
 	    				// new player
-	    				this.players[gp.index]=gp;
-	    				this.players[gp.index].down=[];
-	    				this.players[gp.index].justDown=[];
-	    				this.players[gp.index].justUp=[];
+	    				this.players[gp.index] = gp;
+	    				this.players[gp.index].down = [];
+	    				this.players[gp.index].justDown = [];
+	    				this.players[gp.index].justUp = [];
+	    				this.players[gp.index].axesPrev = [];
 	    			}else{
 	    				// returning player, copy old button states before replacing
 	    				gp.down = this.players[gp.index].down;
 	    				gp.justDown = this.players[gp.index].justDown;
 	    				gp.justUp = this.players[gp.index].justUp;
-	    				this.players[gp.index]=gp;
+	    				gp.axesPrev = this.players[gp.index].axesPrev;
+	    				this.players[gp.index] = gp;
 	    			}
-					this.connected=true;
+					this.connected = true;
 	    		}else{
-	    			this.players[gps[i].index]=null;
+	    			this.players[gps[i].index] = null;
 	    		}
     		}
     	}
 	},
 
 	update:function(){
+		// store the previous axis values
+		// has to be done before pollConnections since that will get the new axis values
+		for(var i=0; i < this.players.length; ++i){
+			var p=this.getPlayer(i);
+			p.axesPrev=p.axes.slice();
+		}
+
 		// poll connections and update gamepad states every frame because chrome's a lazy bum
         if(this.pollEveryFrame){
         	this.pollconnections();
@@ -107,13 +116,14 @@ var gamepads={
 					}
 				}
 			}
+
 		}
 	},
 
 	// returns _player's gamepad
 	// if one doesn't exist, returns an object with gamepad properties reflecting a null state
 	getPlayer:function(_player){
-		return this.players[_player]||{connected:false,down:[],justDown:[],justUp:[],axes:[],buttons:[]};
+		return this.players[_player]||{connected:false,down:[],justDown:[],justUp:[],axes:[],axesPrev:[],buttons:[]};
 	},
 
 	// returns [x,y] representing the two axes for _player at _offset
@@ -122,13 +132,17 @@ var gamepads={
 	// if _offset isn't set, sets to 0
 	// if _length isn't set, sets to 2
 	// if _player isn't set (or -1), returns the sum of everyone's axes
-	getAxes: function(_offset,_length,_player){
-		if(arguments.length < 3){
-			_player=-1;
-			if(arguments.length < 2){
-				_length=2;
-				if(arguments.length < 1){
-					_offset=0;
+	// if _prev is set and true, uses the axis values from the previous frame instead of the current one
+	getAxes: function(_offset,_length,_player,_prev){
+		if(arguments.length < 4){
+			_prev=false;
+			if(arguments.length < 3){
+				_player=-1;
+				if(arguments.length < 2){
+					_length=2;
+					if(arguments.length < 1){
+						_offset=0;
+					}
 				}
 			}
 		}
@@ -139,13 +153,15 @@ var gamepads={
 		}
 		if(_player == -1){
 			for(var i=0; i < this.players.length; ++i){
-				var a=this.getAxes(_offset,_length,i);
+				var a=this.getAxes(_offset,_length,i,_prev);
 				for(var j=0;j<a.length;++j){
 					axes[j]+=a[j];
 				}
 			}
 		}else{
-			var a=this.getPlayer(_player).axes.slice(_offset,_offset+_length);
+			var p = this.getPlayer(_player);
+			var a = _prev ? p.axesPrev : p.axes;
+			a=a.slice(_offset,_offset+_length);
 			for(var i=0;i<a.length;++i){
 				if(Math.abs(a[i]) < this.deadZone){
 					axes[i]+=0;
@@ -162,28 +178,36 @@ var gamepads={
 	},
 	// returns getAxes(_axis,1,_player)[0]
 	// if _player isn't set, returns the sum of everyone's axis
-	getAxis: function(_axis,_player){
-		if(arguments.length < 2){
-			_player = -1;
+	// if _prev is set and true, uses the axis values from the previous frame instead of the current one
+	getAxis: function(_axis,_player,_prev){
+		if(arguments.length < 3){
+			_prev=false;
+			if(arguments.length < 2){
+				_player = -1;
+			}
 		}
-		return this.getAxes(_axis,1,_player)[0];
+		return this.getAxes(_axis,1,_player,_prev)[0];
 	},
 
 	// returns true if _axis is past _threshold in _direction
 	// if _direction isn't set, assumes the sign of _theshold is the direction (e.g. if the theshold is -0.5, it will check if _axis is < -0.5)
 	// if _player isn't set, returns true for any player
-	axisPast: function(_axis, _threshold, _direction, _player){
-		if(arguments.length < 4){
-			_player=-1;
-			if(arguments.length < 3){
-				_direction = Math.sign(_threshold);
-				if(arguments.length < 2){
-					console.error("must specify axis and threshold");
+	// if _prev is set and true, uses the axis values from the previous frame instead of the current one
+	axisPast: function(_axis, _threshold, _direction, _player,_prev){
+		if(arguments.length < 5){
+			_prev=false;
+			if(arguments.length < 4){
+				_player=-1;
+				if(arguments.length < 3){
+					_direction = Math.sign(_threshold);
+					if(arguments.length < 2){
+						console.error("must specify axis and threshold");
+					}
 				}
 			}
 		}
 
-		var a=this.getAxis(_axis,_player);
+		var a=this.getAxis(_axis,_player,_prev);
 
 
 
@@ -194,6 +218,21 @@ var gamepads={
 		}else{
 			console.error("direction can't be zero");
 		}
+	},
+	// returns true if _axis is past _threshold in _direction and WAS NOT in previous update
+	// if _direction isn't set, assumes the sign of _theshold is the direction (e.g. if the theshold is -0.5, it will check if _axis is < -0.5)
+	// if _player isn't set, returns true for any player
+	axisJustPast: function(_axis, _threshold, _direction, _player){
+		if(arguments.length < 4){
+			_player=-1;
+			if(arguments.length < 3){
+				_direction = Math.sign(_threshold);
+				if(arguments.length < 2){
+					console.error("must specify axis and threshold");
+				}
+			}
+		}
+		return this.axisPast(_axis,_threshold,_direction,_player,false) && !this.axisPast(_axis,_threshold,_direction,_player,true);
 	},
 
 	// returns [x,y] representing the dpad for _player
