@@ -1,4 +1,21 @@
 var gamepads={
+	A:0,
+	X:2,
+	B:1,
+	Y:3,
+	LB:4,
+	RB:5,
+	LT:6,
+	RT:7,
+	BACK:8,
+	START:9,
+	LHAT:10,
+	RHAT:11,
+	DPAD_DOWN:12,
+	DPAD_UP:13,
+	DPAD_LEFT:14,
+	DPAD_RIGHT:15,
+
 	players:[],
 
 	available:false,
@@ -6,10 +23,6 @@ var gamepads={
 	connected:false,
 	deadZone:0.25,
 	snapZone:0.25,
-
-	down:[],
-	justDown:[],
-	justUp:[],
 
 	init:function(){
 		if(navigator.getGamepads){
@@ -153,14 +166,14 @@ var gamepads={
 				dpad[1]+=d[1];
 			}
 		}else{
-			if(this.isDown(15,_player)){
+			if(this.isDown(this.DPAD_RIGHT,_player)){
 				dpad[0]+=1;
-			}if(this.isDown(14,_player)){
+			}if(this.isDown(this.DPAD_LEFT,_player)){
 				dpad[0]-=1;
 			}
-			if(this.isDown(13,_player)){
+			if(this.isDown(this.DPAD_UP,_player)){
 				dpad[1]+=1;
-			}if(this.isDown(12,_player)){
+			}if(this.isDown(this.DPAD_DOWN,_player)){
 				dpad[1]-=1;
 			}
 		}
