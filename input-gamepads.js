@@ -66,7 +66,9 @@ var gamepads={
 
 		// assume existing players' gamepads aren't enabled until they're found
 		for(var i = 0; i < this.players.length; ++i){
-			this.players[i].disabled = true;
+			if(this.players[i]){
+				this.players[i].disabled = true;
+			}
 		}
 
     	var gps=navigator.getGamepads();
