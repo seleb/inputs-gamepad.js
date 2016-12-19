@@ -45,7 +45,11 @@ var gamepads={
         	console.log("Gamepad API available");
         	if(navigator.userAgent.indexOf('Firefox/') != -1){
         		// listen to connection events for firefox
-		        $(window).on("gamepadconnected gamepaddisconnected", function(event) {
+		        window.addEventListener("gamepadconnected", function(event) {
+		            console.log("gamepad connection event");
+		            this.pollconnections(event);
+		        }.bind(this));
+		        window.addEventListener("gamepaddisconnected", function(event) {
 		            console.log("gamepad connection event");
 		            this.pollconnections(event);
 		        }.bind(this));
