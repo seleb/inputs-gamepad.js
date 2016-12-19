@@ -72,11 +72,11 @@ var gamepads={
 	    		if(gp.connected){
 	    			if(this.players[gp.index] == null){
 	    				// new player
+	    				gp.down = [];
+	    				gp.justDown = [];
+	    				gp.justUp = [];
+	    				gp.axesPrev = [];
 	    				this.players[gp.index] = gp;
-	    				this.players[gp.index].down = [];
-	    				this.players[gp.index].justDown = [];
-	    				this.players[gp.index].justUp = [];
-	    				this.players[gp.index].axesPrev = [];
 	    			}else{
 	    				// returning player, copy old button states before replacing
 	    				gp.down = this.players[gp.index].down;
@@ -88,7 +88,7 @@ var gamepads={
 					this.connected = true;
     				this.players[gp.index].disabled = false;
 	    		}else{
-	    			this.players[gps[i].index] = null;
+	    			this.players[gp.index] = null;
 	    		}
     		}
     	}
