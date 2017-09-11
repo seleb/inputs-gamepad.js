@@ -142,9 +142,10 @@ var gamepads={
 		}
 	},
 
-	// returns [x,y] representing the two axes for _player at _offset
+	// returns an array representing _length axes for _player at _offset
 	// if abs(an axis value) is < deadZone, returns 0 instead
-	// if abs(1-an axis value) is < snapZone, returns 1 instead
+	// if abs(1-an axis value) is < snapZone, returns 1/-1 instead
+	// otherwise, returns the axis value, normalized between deadZone and (1-snapZone)
 	// if _offset isn't set, sets to 0
 	// if _length isn't set, sets to 2
 	// if _player isn't set (or -1), returns the sum of everyone's axes
@@ -186,7 +187,7 @@ var gamepads={
 				}else if(Math.abs(-1.0-a[i]) < this.snapZone){
 					axes[i]-=1;
 				}else{
-					axes[i]+=a[i];
+					axes[i]+=Math.sign(a[i])*(Math.abs(a[i])-this.deadZone)/(1.0-this.snapZone-this.deadZone);
 				}
 			}
 		}
