@@ -19,6 +19,7 @@ function main(){
   var button_is_currently_up_but_wasnt_last_frame = gamepads.isJustUp(gamepads.B);
   var button_is_currently_down_but_wasnt_last_frame = gamepads.isJustDown(gamepads.Y);
   var axis_value = gamepads.getAxis(gamepads.LSTICK_H);
+  var axis_crossed_threshold_like_button = gamepads.axisPast(gamepads.LSTICK_H, 0.5, 1);
   var the_first_four_axis_values_as_a_4d_vector = gamepads.getAxes(0,4);
   var dpad_as_a_2d_vector = gamepads.getDpad();
   
