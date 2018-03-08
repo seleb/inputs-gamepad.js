@@ -360,3 +360,5 @@ var gamepads = {
 		};
 	}
 };
+
+module.exports = gamepads;
