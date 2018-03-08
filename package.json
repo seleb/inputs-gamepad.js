@@ -1,0 +1,9 @@
+{
+  "name": "input-gamepads.js",
+  "version": "1.0.0",
+  "description": "Wrapper for HTML5 Gamepad API",
+  "main": "input-gamepads.js",
+  "repository": "https://github.com/seleb/input-gamepads.js.git",
+  "author": "Sean S. LeBlanc <sean.s.leblanc@gmail.com>",
+  "license": "MIT"
+}
