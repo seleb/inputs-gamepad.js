@@ -3,15 +3,27 @@ Wrapper for HTML5 Gamepad API. Not event-based.
 
 Developed and tested with an xbox360 wired controller on Chrome and Firefox.
 
-## How To Use
-Include `inputs-gamepad.js` in your HTML file.
+## How To
+### Browser
 ```HTML
 <script src="input-gamepads.js"></script>
 ```
-Initialization: `gamepads.init()`
+### Node
+```
+npm install input-gamepads.js --save
+```
+```JS
+const gamepads = require("input-gamepads.js");
+```
+
+### Use
 
 Loop:
 ```JS
+// initialization
+gamepads.init();
+
+// main loop
 function main(){
   // get inputs
   var button_is_currently_up = gamepads.isUp(gamepads.A);
