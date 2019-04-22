@@ -4,21 +4,43 @@ Wrapper for HTML5 Gamepad API. Not event-based.
 Developed and tested with an xbox360 wired controller on Chrome and Firefox.
 
 ## How To
+
 ### Browser
+
+1. include `./dist/index.iife.js` in HTML
+
 ```HTML
-<script src="input-gamepads.js"></script>
+<script src="vendor/input-gamepads.js/dist/index.iife.js"></script>
 ```
+
+2. reference global
+
+```JS
+const gamepads = window.inputGamepads;
+```
+
 ### Node
-```
+
+1. install
+
+```sh
 npm install input-gamepads.js --save
 ```
+
+2. import
+
 ```JS
 const gamepads = require("input-gamepads.js");
+```
+
+```JS
+import gamepads from 'input-gamepads.js';
 ```
 
 ### Use
 
 Loop:
+
 ```JS
 // initialization
 gamepads.init();
