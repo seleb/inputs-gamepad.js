@@ -9,7 +9,7 @@ Developed and tested with an xbox360 wired controller on Chrome and Firefox.
 
 1. include `./dist/index.iife.js` in HTML
 
-```HTML
+```html
 <script src="vendor/input-gamepads.js/dist/index.iife.js"></script>
 ```
 
@@ -29,11 +29,11 @@ npm install input-gamepads.js --save
 
 2. import
 
-```JS
+```js
 const gamepads = require("input-gamepads.js");
 ```
 
-```JS
+```js
 import gamepads from 'input-gamepads.js';
 ```
 
@@ -41,7 +41,7 @@ import gamepads from 'input-gamepads.js';
 
 Loop:
 
-```JS
+```js
 // initialization
 gamepads.init();
 
