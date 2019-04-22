@@ -15,7 +15,7 @@ Developed and tested with an xbox360 wired controller on Chrome and Firefox.
 
 2. reference global
 
-```JS
+```js
 const gamepads = window.inputGamepads;
 ```
 
