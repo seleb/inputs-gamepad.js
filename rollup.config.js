@@ -13,7 +13,7 @@ export default {
 		file: pkg.module,
 		format: 'es',
 	}, {
-		file: pkg.browser,
+		file: pkg.unpkg,
 		name: 'inputGamepads',
 		format: 'iife',
 	}],
