@@ -9,14 +9,12 @@ export default {
 	output: [{
 		file: pkg.main,
 		format: 'cjs',
-		sourcemap: true
 	}, {
 		file: pkg.module,
 		format: 'es',
-		sourcemap: true
 	}, {
-		file: `./dist/${pkg.name}.min.js`,
-		name: pkg.name.replace(/-(.)/g, (_, str) => str.toUpperCase()),
+		file: pkg.browser,
+		name: 'inputGamepads',
 		format: 'iife',
 	}],
 	plugins: [
