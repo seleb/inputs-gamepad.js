@@ -1,6 +1,6 @@
 {
 	"name": "input-gamepads.js",
-	"version": "2.0.2",
+	"version": "3.0.0",
 	"description": "Wrapper for HTML5 Gamepad API",
 	"main": "./dist/index.js",
 	"module": "./dist/index.es.js",
@@ -18,14 +18,17 @@
 	},
 	"scripts": {
 		"build": "rollup -c",
+		"lint": "eslint ./src/*.ts",
 		"prepare": "npm run build"
 	},
 	"devDependencies": {
-		"@babel/core": "^7.4.0",
-		"@babel/preset-env": "^7.4.2",
-		"rollup": "^1.7.0",
-		"rollup-plugin-babel": "^4.3.2",
-		"rollup-plugin-commonjs": "^9.2.1",
-		"rollup-plugin-node-resolve": "^4.2.3"
+		"@typescript-eslint/eslint-plugin": "^2.23.0",
+		"@typescript-eslint/parser": "^2.23.0",
+		"eslint": "^6.8.0",
+		"eslint-config-airbnb-base": "^14.1.0",
+		"eslint-plugin-import": "^2.20.1",
+		"rollup": "^2.0.6",
+		"rollup-plugin-typescript2": "^0.26.0",
+		"typescript": "^3.8.3"
 	}
 }

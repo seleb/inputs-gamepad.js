@@ -1,378 +1,351 @@
 'use strict';
 
-const nullGamepad = {
-  connected: false,
-  disabled: true,
-  down: [],
-  justDown: [],
-  justUp: [],
-  axes: [],
-  axesPrev: [],
-  buttons: []
+Object.defineProperty(exports, '__esModule', { value: true });
+
+(function (Buttons) {
+    // XBOX360 wired controller configuration
+    /* eslint-disable no-unused-vars */
+    Buttons[Buttons["A"] = 0] = "A";
+    Buttons[Buttons["X"] = 2] = "X";
+    Buttons[Buttons["B"] = 1] = "B";
+    Buttons[Buttons["Y"] = 3] = "Y";
+    Buttons[Buttons["LB"] = 4] = "LB";
+    Buttons[Buttons["RB"] = 5] = "RB";
+    Buttons[Buttons["LT"] = 6] = "LT";
+    Buttons[Buttons["RT"] = 7] = "RT";
+    Buttons[Buttons["BACK"] = 8] = "BACK";
+    Buttons[Buttons["START"] = 9] = "START";
+    Buttons[Buttons["LHAT"] = 10] = "LHAT";
+    Buttons[Buttons["RHAT"] = 11] = "RHAT";
+    Buttons[Buttons["DPAD_UP"] = 12] = "DPAD_UP";
+    Buttons[Buttons["DPAD_DOWN"] = 13] = "DPAD_DOWN";
+    Buttons[Buttons["DPAD_LEFT"] = 14] = "DPAD_LEFT";
+    Buttons[Buttons["DPAD_RIGHT"] = 15] = "DPAD_RIGHT";
+    /* eslint-enable no-unused-vars */
+})(exports.Buttons || (exports.Buttons = {}));
+(function (Axes) {
+    /* eslint-disable no-unused-vars */
+    Axes[Axes["LSTICK_H"] = 0] = "LSTICK_H";
+    Axes[Axes["LSTICK_V"] = 1] = "LSTICK_V";
+    Axes[Axes["RSTICK_H"] = 2] = "RSTICK_H";
+    Axes[Axes["RSTICK_V"] = 3] = "RSTICK_V";
+    /* eslint-enable no-unused-vars */
+})(exports.Axes || (exports.Axes = {}));
+var nullGamepad = {
+    original: {
+        axes: [],
+        buttons: [],
+        connected: false,
+    },
+    disabled: true,
+    down: {},
+    justDown: {},
+    justUp: {},
+    axesPrev: {},
 };
-const gamepads = {
-  // XBOX360 wired controller configuration
-  // buttons
-  A: 0,
-  X: 2,
-  B: 1,
-  Y: 3,
-  LB: 4,
-  RB: 5,
-  LT: 6,
-  RT: 7,
-  BACK: 8,
-  START: 9,
-  LHAT: 10,
-  RHAT: 11,
-  DPAD_UP: 12,
-  DPAD_DOWN: 13,
-  DPAD_LEFT: 14,
-  DPAD_RIGHT: 15,
-  // axes
-  LSTICK_H: 0,
-  LSTICK_V: 1,
-  RSTICK_H: 2,
-  RSTICK_V: 3,
-  // settings
-
-  /** if `abs(an axis value)` is < `deadZone`, returns 0 instead */
-  deadZone: 0.25,
-  // 
-
-  /** if `abs(1-an axis value)` is < `snapZone`, returns 1 instead */
-  snapZone: 0.25,
-
-  /** axis values between `deadZone` and `snapZone` will be run through this function
-   *
-   * defaults to normalizing between the two thresholds */
-  interpolate: function (value) {
-    const v = Math.max(0, Math.min(1, (value - this.deadZone) / (1.0 - this.snapZone - this.deadZone)));
-    return v;
-  },
-  // internal vars
-  players: [],
-  available: false,
-  pollEveryFrame: false,
-  connected: false,
-
-  /**
-   * initialize gamepads
-   * (only call once per session)
-   */
-  init: function () {
-    if (navigator.getGamepads) {
-      this.available = true;
-    } else if (navigator.webkitGetGamepads) {
-      navigator.getGamepads = navigator.webkitGetGamepads;
-      this.available = true;
-    }
-
-    if (this.available) {
-      console.log("Gamepad API available");
-
-      if (navigator.userAgent.includes('Firefox')) {
-        // listen to connection events for firefox
-        window.addEventListener("gamepadconnected", this.pollconnections.bind(this));
-        window.addEventListener("gamepaddisconnected", this.pollconnections.bind(this));
-      } else {
-        this.pollEveryFrame = true;
-      }
-    } else {
-      console.error("Gamepad API not available");
-    }
-  },
-
-  /**
-   * update gamepads (clears arrays, polls connections, etc.)
-   */
-  pollconnections: function () {
-    this.connected = false; // assume existing players' gamepads aren't enabled until they're found
-
-    for (let i = 0; i < this.players.length; ++i) {
-      if (this.players[i]) {
-        this.players[i].disabled = true;
-      }
-    }
-
-    const gps = navigator.getGamepads();
-
-    for (let i = 0; i < gps.length; ++i) {
-      const gp = gps[i];
-
-      if (gp) {
-        if (gp.connected) {
-          if (this.players[gp.index] == null) {
-            // new player
-            gp.down = [];
-            gp.justDown = [];
-            gp.justUp = [];
-            gp.axesPrev = [];
-            this.players[gp.index] = gp;
-          } else {
-            // returning player, copy old button states before replacing
-            gp.down = this.players[gp.index].down;
-            gp.justDown = this.players[gp.index].justDown;
-            gp.justUp = this.players[gp.index].justUp;
-            gp.axesPrev = this.players[gp.index].axesPrev;
-            this.players[gp.index] = gp;
-          }
-
-          this.connected = true;
-          this.players[gp.index].disabled = false;
-        } else {
-          this.players[gp.index] = null;
+var Gamepads = /** @class */ (function () {
+    /**
+    * initialize gamepads
+    */
+    function Gamepads() {
+        var _this = this;
+        // settings
+        /** if `abs(an axis value)` is < `deadZone`, returns 0 instead */
+        this.deadZone = 0.25;
+        /** if `abs(1-an axis value)` is < `snapZone`, returns 1 instead */
+        this.snapZone = 0.25;
+        /** axis values between `deadZone` and `snapZone` will be run through this function
+        *
+        * defaults to normalizing between the two thresholds */
+        this.interpolate = function (value) {
+            var v = Math.max(0, Math.min(1, (value - _this.deadZone) / (1.0 - _this.snapZone - _this.deadZone)));
+            return v;
+        };
+        // internal vars
+        this.players = [];
+        this.available = false;
+        this.pollEveryFrame = false;
+        this.connected = false;
+        /**
+        * update gamepads (clears arrays, polls connections, etc.)
+        */
+        this.pollconnections = function () {
+            _this.connected = false;
+            // assume existing players' gamepads aren't enabled until they're found
+            for (var i = 0; i < _this.players.length; ++i) {
+                if (_this.players[i]) {
+                    _this.players[i].disabled = true;
+                }
+            }
+            var gps = navigator.getGamepads();
+            for (var i = 0; i < gps.length; ++i) {
+                var gp = gps[i];
+                if (gp) {
+                    if (gp.connected) {
+                        if (_this.players[gp.index] == null) {
+                            // new player
+                            _this.players[gp.index] = {
+                                disabled: false,
+                                original: gp,
+                                down: {},
+                                justDown: {},
+                                justUp: {},
+                                axesPrev: {},
+                            };
+                        }
+                        else {
+                            // returning player, just assign the gamepad
+                            _this.players[gp.index].original = gp;
+                        }
+                        _this.connected = true;
+                        _this.players[gp.index].disabled = false;
+                    }
+                    else {
+                        _this.players[gp.index] = null;
+                    }
+                }
+            }
+        };
+        /**
+        * update gamepads (clears arrays, polls connections, etc.)
+        */
+        this.update = function () {
+            // store the previous axis values
+            // has to be done before pollConnections since that will get the new axis values
+            for (var i = 0; i < _this.players.length; ++i) {
+                var p = _this.getPlayer(i);
+                p.axesPrev = p.original.axes.slice();
+            }
+            // poll connections and update gamepad states every frame because chrome's a lazy bum
+            if (_this.pollEveryFrame) {
+                _this.pollconnections();
+            }
+            for (var i = 0; i < _this.players.length; ++i) {
+                var p = _this.getPlayer(i);
+                if (p && p != null) {
+                    for (var j = 0; j < p.original.buttons.length; ++j) {
+                        if (p.original.buttons[j].pressed) {
+                            p.justDown[j] = !(p.down[j] === true);
+                            p.down[j] = true;
+                            p.justUp[j] = false;
+                        }
+                        else {
+                            p.justUp[j] = p.down[j] === true;
+                            p.down[j] = false;
+                            p.justDown[j] = false;
+                        }
+                    }
+                }
+            }
+        };
+        /**
+        * @returns `player`'s gamepad
+        *
+        * if one doesn't exist, returns an object with gamepad properties reflecting a null state
+        */
+        this.getPlayer = function (player) {
+            if (_this.players[player]
+                && _this.players[player].original.connected
+                && !_this.players[player].disabled) {
+                return _this.players[player];
+            }
+            return nullGamepad;
+        };
+        /**
+        * @returns an array representing `length` axes for `player` at `offset`
+        *
+        * if `abs(an axis value)` is < `deadZone`, returns 0 instead
+        * if `abs(1-an axis value)` is < `snapZone`, returns 1/-1 instead
+        * otherwise, returns the axis value normalized between `deadZone` and `(1-snapZone)`
+        * @param {Number} offset axis index
+        * @param {Number} length number of axes to return
+        * @param {Number} player player index (`undefined` for "sum of all")
+        * @param {boolean} prev if `true` uses axis values from previous update
+        */
+        this.getAxes = function (offset, length, player, prev) {
+            if (offset === void 0) { offset = 0; }
+            if (length === void 0) { length = 2; }
+            if (prev === void 0) { prev = false; }
+            var axes = [];
+            for (var i = 0; i < length; ++i) {
+                axes[i] = 0;
+            }
+            if (player === undefined) {
+                for (var i = 0; i < _this.players.length; ++i) {
+                    var a = _this.getAxes(offset, length, i, prev);
+                    for (var j = 0; j < a.length; ++j) {
+                        axes[j] += a[j];
+                    }
+                }
+            }
+            else {
+                var p = _this.getPlayer(player);
+                var a = prev ? p.axesPrev : p.original.axes;
+                a = Object.values(a).slice(offset, offset + length);
+                for (var i = 0; i < a.length; ++i) {
+                    if (Math.abs(a[i]) < _this.deadZone) {
+                        axes[i] += 0;
+                    }
+                    else if (Math.abs(1.0 - a[i]) < _this.snapZone) {
+                        axes[i] += 1;
+                    }
+                    else if (Math.abs(-1.0 - a[i]) < _this.snapZone) {
+                        axes[i] -= 1;
+                    }
+                    else {
+                        axes[i] += Math.sign(a[i]) * _this.interpolate(Math.abs(a[i]));
+                    }
+                }
+            }
+            return axes;
+        };
+        /**
+       * @returns equivalent to `getAxes(axis, 1, player, prev)[0]`
+       */
+        this.getAxis = function (axis, player, prev) { return _this.getAxes(axis, 1, player, prev)[0]; };
+        /**
+        * @returns `true` if `axis` is past `threshold` in `direction`
+        * @param {Number} axis axis index
+        * @param {Number} threshold threshold (-1 to 1)
+        * @param {Number} direction direction (-1|1) (if `undefined`, assumes the sign of `theshold` is the direction (e.g. if `theshold` is -0.5, it will check if the axis is < -0.5))
+        * @param {Number} player player index (`undefined` for "any")
+        * @param {boolean} prev if `true` uses axis values from previous update
+        */
+        this.axisPast = function (axis, threshold, direction, player, prev) {
+            if (!threshold) {
+                throw new Error('must specify a non-zero threshold');
+            }
+            if (!direction) {
+                direction = threshold > 0 ? 1 : -1;
+            }
+            var a = _this.getAxis(axis, player, prev);
+            return direction < 0 ? a < threshold : a > threshold;
+        };
+        /**
+        * @returns `true` if `axis` is past `threshold` in `direction` and WAS NOT in previous update
+        * @param {Number} axis axis index
+        * @param {Number} threshold threshold (-1 to 1)
+        * @param {Number} direction direction (-1|1) (if `undefined`, assumes the sign of `theshold` is the direction (e.g. if `theshold` is -0.5, it will check if the axis is < -0.5))
+        * @param {Number} player player index (`undefined` for "any")
+        */
+        this.axisJustPast = function (axis, threshold, direction, player) { return _this.axisPast(axis, threshold, direction, player, false)
+            && !_this.axisPast(axis, threshold, direction, player, true); };
+        /**
+        * @returns `[x,y]` representing the dpad for `player`
+        * @param {Number} player player index (`undefined` for "sum of all")
+        */
+        this.getDpad = function (player) {
+            var x = 0;
+            var y = 0;
+            if (player === undefined) {
+                for (var i = 0; i < _this.players.length; ++i) {
+                    var _a = _this.getDpad(i), ix = _a[0], iy = _a[1];
+                    x += ix;
+                    y += iy;
+                }
+            }
+            else {
+                if (_this.isDown(exports.Buttons.DPAD_RIGHT, player)) {
+                    x += 1;
+                }
+                if (_this.isDown(exports.Buttons.DPAD_LEFT, player)) {
+                    x -= 1;
+                }
+                if (_this.isDown(exports.Buttons.DPAD_UP, player)) {
+                    y += 1;
+                }
+                if (_this.isDown(exports.Buttons.DPAD_DOWN, player)) {
+                    y -= 1;
+                }
+            }
+            return [x, y];
+        };
+        /**
+        * @returns `true` if `player`'s `btn` is currently down
+        * @param {Number} btn button index
+        * @param {Number} player player index (`undefined` for "any")
+        */
+        this.isDown = function (btn, player) {
+            if (btn === undefined) {
+                throw new Error('must specify a button');
+            }
+            if (player === undefined) {
+                for (var i = 0; i < _this.players.length; ++i) {
+                    if (_this.isDown(btn, i)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            return _this.getPlayer(player).down[btn] === true;
+        };
+        /**
+        * @returns equivalent to `!isDown(btn, player)`
+        * @param {Number} btn button index
+        * @param {Number} player player index (`undefined` for "any")
+        */
+        this.isUp = function (btn, player) { return !_this.isDown(btn, player); };
+        /**
+        * @returns `true` if `player`'s `btn` is currently down and WAS NOT in previous update
+        * @param {Number} btn button index
+        * @param {Number} player player index (`undefined` for "any")
+        */
+        this.isJustDown = function (btn, player) {
+            if (btn === undefined) {
+                throw new Error('must specify a button');
+            }
+            if (player === undefined) {
+                for (var i = 0; i < _this.players.length; ++i) {
+                    if (_this.isJustDown(btn, i)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            return _this.getPlayer(player).justDown[btn] === true;
+        };
+        /**
+        * @returns `true` if `player`'s `btn` is currently NOT down and WAS down in previous update
+        * @param {Number} btn button index
+        * @param {Number} player player index (`undefined` for "any")
+        */
+        this.isJustUp = function (btn, player) {
+            if (btn === undefined) {
+                throw new Error('must specify a button');
+            }
+            if (player === undefined) {
+                for (var i = 0; i < _this.players.length; ++i) {
+                    if (_this.isJustUp(btn, i)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            return _this.getPlayer(player).justUp[btn] === true;
+        };
+        if (navigator.getGamepads) {
+            this.available = true;
         }
-      }
-    }
-  },
-
-  /**
-   * update gamepads (clears arrays, polls connections, etc.)
-   */
-  update: function () {
-    // store the previous axis values
-    // has to be done before pollConnections since that will get the new axis values
-    for (let i = 0; i < this.players.length; ++i) {
-      const p = this.getPlayer(i);
-      p.axesPrev = p.axes.slice();
-    } // poll connections and update gamepad states every frame because chrome's a lazy bum
-
-
-    if (this.pollEveryFrame) {
-      this.pollconnections();
-    }
-
-    for (let i = 0; i < this.players.length; ++i) {
-      const p = this.getPlayer(i);
-
-      if (p && p != null) {
-        for (let j = 0; j < p.buttons.length; ++j) {
-          if (p.buttons[j].pressed) {
-            p.justDown[j] = !(p.down[j] === true);
-            p.down[j] = true;
-            p.justUp[j] = false;
-          } else {
-            p.justUp[j] = p.down[j] === true;
-            p.down[j] = false;
-            p.justDown[j] = false;
-          }
+        else if (navigator.webkitGetGamepads) {
+            navigator.getGamepads = navigator.webkitGetGamepads;
+            this.available = true;
         }
-      }
-    }
-  },
-
-  /**
-   * @returns `player`'s gamepad
-   * 
-   * if one doesn't exist, returns an object with gamepad properties reflecting a null state
-   */
-  getPlayer: function (player) {
-    if (this.players[player] && this.players[player].connected && !this.players[player].disabled) {
-      return this.players[player];
-    } else {
-      return nullGamepad;
-    }
-  },
-
-  /**
-   * @returns an array representing `length` axes for `player` at `offset`
-   *
-   * if `abs(an axis value)` is < `deadZone`, returns 0 instead
-   * if `abs(1-an axis value)` is < `snapZone`, returns 1/-1 instead
-   * otherwise, returns the axis value normalized between `deadZone` and `(1-snapZone)`
-   * @param {Number} offset axis index
-   * @param {Number} length number of axes to return
-   * @param {Number} player player index (`undefined` for "sum of all")
-   * @param {boolean} prev if `true` uses axis values from previous update
-   */
-  getAxes: function (offset = 0, length = 2, player, prev = false) {
-    const axes = [];
-
-    for (let i = 0; i < length; ++i) {
-      axes[i] = 0;
-    }
-
-    if (player === undefined) {
-      for (let i = 0; i < this.players.length; ++i) {
-        const a = this.getAxes(offset, length, i, prev);
-
-        for (let j = 0; j < a.length; ++j) {
-          axes[j] += a[j];
+        if (this.available) {
+            console.log('Gamepad API available');
+            if (navigator.userAgent.includes('Firefox')) {
+                // listen to connection events for firefox
+                window.addEventListener('gamepadconnected', this.pollconnections.bind(this));
+                window.addEventListener('gamepaddisconnected', this.pollconnections.bind(this));
+            }
+            else {
+                this.pollEveryFrame = true;
+            }
         }
-      }
-    } else {
-      const p = this.getPlayer(player);
-      let a = prev ? p.axesPrev : p.axes;
-      a = a.slice(offset, offset + length);
-
-      for (let i = 0; i < a.length; ++i) {
-        if (Math.abs(a[i]) < this.deadZone) {
-          axes[i] += 0;
-        } else if (Math.abs(1.0 - a[i]) < this.snapZone) {
-          axes[i] += 1;
-        } else if (Math.abs(-1.0 - a[i]) < this.snapZone) {
-          axes[i] -= 1;
-        } else {
-          axes[i] += Math.sign(a[i]) * this.interpolate(Math.abs(a[i]));
+        else {
+            console.error('Gamepad API not available');
         }
-      }
     }
+    return Gamepads;
+}());
 
-    return axes;
-  },
-
-  /**
-   * @returns equivalent to `getAxes(axis, 1, player, prev)[0]`
-   */
-  getAxis: function (axis, player, prev) {
-    return this.getAxes(axis, 1, player, prev)[0];
-  },
-
-  /**
-   * @returns `true` if `axis` is past `threshold` in `direction`
-   * @param {Number} axis axis index
-   * @param {Number} threshold threshold (-1 to 1)
-   * @param {Number} direction direction (-1|1) (if `undefined`, assumes the sign of `theshold` is the direction (e.g. if `theshold` is -0.5, it will check if the axis is < -0.5))
-   * @param {Number} player player index (`undefined` for "any")
-   * @param {boolean} prev if `true` uses axis values from previous update
-   */
-  axisPast: function (axis, threshold, direction, player, prev) {
-    if (!threshold) {
-      throw new Error('must specify a non-zero threshold');
-    }
-
-    if (!direction) {
-      direction = Math.sign(threshold);
-    }
-
-    const a = this.getAxis(axis, player, prev);
-    return direction < 0 ? a < threshold : a > threshold;
-  },
-
-  /**
-   * @returns `true` if `axis` is past `threshold` in `direction` and WAS NOT in previous update
-   * @param {Number} axis axis index
-   * @param {Number} threshold threshold (-1 to 1)
-   * @param {Number} direction direction (-1|1) (if `undefined`, assumes the sign of `theshold` is the direction (e.g. if `theshold` is -0.5, it will check if the axis is < -0.5))
-   * @param {Number} player player index (`undefined` for "any")
-   */
-  axisJustPast: function (axis, threshold, direction, player) {
-    return this.axisPast(axis, threshold, direction, player, false) && !this.axisPast(axis, threshold, direction, player, true);
-  },
-
-  /**
-   * @returns `[x,y]` representing the dpad for `player`
-   * @param {Number} player player index (`undefined` for "sum of all")
-   */
-  getDpad: function (player) {
-    let x = 0;
-    let y = 0;
-
-    if (player === undefined) {
-      for (let i = 0; i < this.players.length; ++i) {
-        const [ix, iy] = this.getDpad(i);
-        x += ix;
-        y += iy;
-      }
-    } else {
-      if (this.isDown(this.DPAD_RIGHT, player)) {
-        x += 1;
-      }
-
-      if (this.isDown(this.DPAD_LEFT, player)) {
-        x -= 1;
-      }
-
-      if (this.isDown(this.DPAD_UP, player)) {
-        y += 1;
-      }
-
-      if (this.isDown(this.DPAD_DOWN, player)) {
-        y -= 1;
-      }
-    }
-
-    return [x, y];
-  },
-
-  /**
-   * @returns `true` if `player`'s `btn` is currently down
-   * @param {Number} btn button index
-   * @param {Number} player player index (`undefined` for "any")
-   */
-  isDown: function (btn, player) {
-    if (btn === undefined) {
-      throw new Error('must specify a button');
-    }
-
-    if (player === undefined) {
-      for (let i = 0; i < this.players.length; ++i) {
-        if (this.isDown(btn, i)) {
-          return true;
-        }
-      }
-
-      return false;
-    } else {
-      return this.getPlayer(player).down[btn] === true;
-    }
-  },
-
-  /**
-   * @returns equivalent to `!isDown(btn, player)`
-   * @param {Number} btn button index
-   * @param {Number} player player index (`undefined` for "any")
-   */
-  isUp: function (btn, player) {
-    return !this.isDown(btn, player);
-  },
-
-  /**
-   * @returns `true` if `player`'s `btn` is currently down and WAS NOT in previous update
-   * @param {Number} btn button index
-   * @param {Number} player player index (`undefined` for "any")
-   */
-  isJustDown: function (btn, player) {
-    if (btn === undefined) {
-      throw new Error('must specify a button');
-    }
-
-    if (player === undefined) {
-      for (var i = 0; i < this.players.length; ++i) {
-        if (this.isJustDown(btn, i)) {
-          return true;
-        }
-      }
-
-      return false;
-    } else {
-      return this.getPlayer(player).justDown[btn] === true;
-    }
-  },
-
-  /**
-   * @returns `true` if `player`'s `btn` is currently NOT down and WAS down in previous update
-   * @param {Number} btn button index
-   * @param {Number} player player index (`undefined` for "any")
-   */
-  isJustUp: function (btn, player) {
-    if (btn === undefined) {
-      throw new Error('must specify a button');
-    }
-
-    if (player === undefined) {
-      for (let i = 0; i < this.players.length; ++i) {
-        if (this.isJustUp(btn, i)) {
-          return true;
-        }
-      }
-
-      return false;
-    }
-
-    return this.getPlayer(player).justUp[btn] === true;
-  }
-};
-
-module.exports = gamepads;
+exports.Gamepads = Gamepads;

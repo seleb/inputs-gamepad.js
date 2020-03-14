@@ -1,4 +1,5 @@
 # inputs-gamepad.js
+
 Wrapper for HTML5 Gamepad API. Not event-based.
 
 Developed and tested with an xbox360 wired controller on Chrome and Firefox.
@@ -16,7 +17,9 @@ Developed and tested with an xbox360 wired controller on Chrome and Firefox.
 2. reference global
 
 ```js
-const gamepads = window.inputGamepads;
+const Gamepads = window.inputGamepads.Gamepads;
+const Buttons = window.inputGamepads.Buttons;
+const Axes = window.inputGamepads.Axes;
 ```
 
 ### Node
@@ -30,11 +33,11 @@ npm install input-gamepads.js --save
 2. import
 
 ```js
-const gamepads = require("input-gamepads.js");
+const { Gamepads, Buttons, Axes } = require("input-gamepads.js");
 ```
 
 ```js
-import gamepads from 'input-gamepads.js';
+import { Gamepads, Buttons, Axes } from 'input-gamepads.js';
 ```
 
 ### Use
@@ -43,17 +46,17 @@ Loop:
 
 ```js
 // initialization
-gamepads.init();
+const gamepads = new Gamepads();
 
 // main loop
 function main(){
   // get inputs
-  var button_is_currently_up = gamepads.isUp(gamepads.A);
-  var button_is_currently_down = gamepads.isDown(gamepads.X);
-  var button_is_currently_up_but_wasnt_last_frame = gamepads.isJustUp(gamepads.B);
-  var button_is_currently_down_but_wasnt_last_frame = gamepads.isJustDown(gamepads.Y);
-  var axis_value = gamepads.getAxis(gamepads.LSTICK_H);
-  var axis_crossed_threshold_like_button = gamepads.axisPast(gamepads.LSTICK_H, 0.5, 1);
+  var button_is_currently_up = gamepads.isUp(Buttons.A);
+  var button_is_currently_down = gamepads.isDown(Buttons.X);
+  var button_is_currently_up_but_wasnt_last_frame = gamepads.isJustUp(Buttons.B);
+  var button_is_currently_down_but_wasnt_last_frame = gamepads.isJustDown(Buttons.Y);
+  var axis_value = gamepads.getAxis(Axes.LSTICK_H);
+  var axis_crossed_threshold_like_button = gamepads.axisPast(Axes.LSTICK_H, 0.5, 1);
   var the_first_four_axis_values_as_a_4d_vector = gamepads.getAxes(0,4);
   var dpad_as_a_2d_vector = gamepads.getDpad();
   
