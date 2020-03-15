@@ -85,7 +85,10 @@ export class Gamepads {
 	};
 
 	// internal vars
-	players: GamepadType[] = [];
+	players: {
+		[key: number]: GamepadType;
+		[key: string]: GamepadType;
+	} = {}
 
 	available = false;
 	pollEveryFrame = false;
@@ -95,6 +98,7 @@ export class Gamepads {
 	* initialize gamepads
 	*/
 	constructor() {
+		// @ts-ignore
 		if (navigator.getGamepads) {
 			this.available = true;
 		} else if (navigator.webkitGetGamepads) {
@@ -129,11 +133,9 @@ export class Gamepads {
 		this.connected = false;
 
 		// assume existing players' gamepads aren't enabled until they're found
-		for (let i = 0; i < this.players.length; ++i) {
-			if (this.players[i]) {
-				this.players[i].disabled = true;
-			}
-		}
+		Object.values(this.players).forEach((player) => {
+			player.disabled = true;
+		});
 
 		const gps = navigator.getGamepads();
 		for (let i = 0; i < gps.length; ++i) {
@@ -157,7 +159,7 @@ export class Gamepads {
 					this.connected = true;
 					this.players[gp.index].disabled = false;
 				} else {
-					this.players[gp.index] = null;
+					delete this.players[gp.index];
 				}
 			}
 		}
@@ -169,19 +171,21 @@ export class Gamepads {
 	update = () => {
 		// store the previous axis values
 		// has to be done before pollConnections since that will get the new axis values
-		for (let i = 0; i < this.players.length; ++i) {
+		Object.keys(this.players).forEach((i) => {
 			const p = this.getPlayer(i);
-			p.axesPrev = p.original.axes.slice() as unknown as AxesMap;
-		}
+			if (p?.original?.axes) {
+				p.axesPrev = p.original.axes.slice() as unknown as AxesMap;
+			}
+		});
 
 		// poll connections and update gamepad states every frame because chrome's a lazy bum
 		if (this.pollEveryFrame) {
 			this.pollconnections();
 		}
 
-		for (let i = 0; i < this.players.length; ++i) {
+		Object.keys(this.players).forEach((i) => {
 			const p = this.getPlayer(i);
-			if (p && p != null) {
+			if (p?.original?.buttons) {
 				for (let j: Buttons = 0; j < p.original.buttons.length; ++j) {
 					if (p.original.buttons[j].pressed) {
 						p.justDown[j] = !(p.down[j] === true);
@@ -194,7 +198,7 @@ export class Gamepads {
 					}
 				}
 			}
-		}
+		});
 	};
 
 	/**
@@ -202,11 +206,10 @@ export class Gamepads {
 	*
 	* if one doesn't exist, returns an object with gamepad properties reflecting a null state
 	*/
-	getPlayer = (player: number): GamepadType => {
+	getPlayer = (player: number | string): GamepadType => {
 		if (
-			this.players[player]
-			&& this.players[player].original.connected
-			&& !this.players[player].disabled
+			this.players[player]?.original?.connected
+			&& !this.players[player]?.disabled
 		) {
 			return this.players[player];
 		}
@@ -224,31 +227,33 @@ export class Gamepads {
 	* @param {Number} player player index (`undefined` for "sum of all")
 	* @param {boolean} prev if `true` uses axis values from previous update
 	*/
-	getAxes = (offset = 0, length = 2, player?: number, prev = false) => {
-		const axes = [];
+	getAxes = (offset = 0, length = 2, player?: number | string, prev = false) => {
+		const axes: number[] = [];
 		for (let i = 0; i < length; ++i) {
 			axes[i] = 0;
 		}
 		if (player === undefined) {
-			for (let i = 0; i < this.players.length; ++i) {
+			Object.keys(this.players).forEach((i) => {
 				const a = this.getAxes(offset, length, i, prev);
 				for (let j = 0; j < a.length; ++j) {
 					axes[j] += a[j];
 				}
-			}
+			});
 		} else {
 			const p = this.getPlayer(player);
-			let a = prev ? p.axesPrev : p.original.axes;
-			a = Object.values(a).slice(offset, offset + length);
-			for (let i = 0; i < a.length; ++i) {
-				if (Math.abs(a[i]) < this.deadZone) {
-					axes[i] += 0;
-				} else if (Math.abs(1.0 - a[i]) < this.snapZone) {
-					axes[i] += 1;
-				} else if (Math.abs(-1.0 - a[i]) < this.snapZone) {
-					axes[i] -= 1;
-				} else {
-					axes[i] += Math.sign(a[i]) * this.interpolate(Math.abs(a[i]));
+			if (p?.original) {
+				const axesSource = prev ? p.axesPrev : p.original.axes as unknown as AxesMap;
+				const a = Object.values(axesSource).slice(offset, offset + length);
+				for (let i = 0; i < a.length; ++i) {
+					if (Math.abs(a[i]) < this.deadZone) {
+						axes[i] += 0;
+					} else if (Math.abs(1.0 - a[i]) < this.snapZone) {
+						axes[i] += 1;
+					} else if (Math.abs(-1.0 - a[i]) < this.snapZone) {
+						axes[i] -= 1;
+					} else {
+						axes[i] += Math.sign(a[i]) * this.interpolate(Math.abs(a[i]));
+					}
 				}
 			}
 		}
@@ -258,7 +263,7 @@ export class Gamepads {
 	/**
    * @returns equivalent to `getAxes(axis, 1, player, prev)[0]`
    */
-	getAxis = (axis: Axes, player?: number, prev?: boolean) => this.getAxes(axis, 1, player, prev)[0];
+	getAxis = (axis: Axes, player?: number | string, prev?: boolean) => this.getAxes(axis, 1, player, prev)[0];
 
 	/**
 	* @returns `true` if `axis` is past `threshold` in `direction`
@@ -272,7 +277,7 @@ export class Gamepads {
 		axis: Axes,
 		threshold: number,
 		direction: -1 | 1,
-		player?: number,
+		player?: number | string,
 		prev?: boolean,
 	) => {
 		if (!threshold) {
@@ -298,7 +303,7 @@ export class Gamepads {
 		axis: Axes,
 		threshold: number,
 		direction: -1 | 1,
-		player?: number,
+		player?: number | string,
 	) => this.axisPast(axis, threshold, direction, player, false)
 		&& !this.axisPast(axis, threshold, direction, player, true);
 
@@ -306,15 +311,15 @@ export class Gamepads {
 	* @returns `[x,y]` representing the dpad for `player`
 	* @param {Number} player player index (`undefined` for "sum of all")
 	*/
-	getDpad = (player?: number) => {
+	getDpad = (player?: number | string) => {
 		let x = 0;
 		let y = 0;
 		if (player === undefined) {
-			for (let i = 0; i < this.players.length; ++i) {
+			Object.keys(this.players).forEach(i => {
 				const [ix, iy] = this.getDpad(i);
 				x += ix;
 				y += iy;
-			}
+			});
 		} else {
 			if (this.isDown(Buttons.DPAD_RIGHT, player)) {
 				x += 1;
@@ -337,19 +342,14 @@ export class Gamepads {
 	* @param {Number} btn button index
 	* @param {Number} player player index (`undefined` for "any")
 	*/
-	isDown = (btn: Buttons, player?: number) => {
+	isDown = (btn: Buttons, player?: number | string): boolean => {
 		if (btn === undefined) {
 			throw new Error('must specify a button');
 		}
 		if (player === undefined) {
-			for (let i = 0; i < this.players.length; ++i) {
-				if (this.isDown(btn, i)) {
-					return true;
-				}
-			}
-			return false;
+			return Object.keys(this.players).some((i) => this.isDown(btn, i));
 		}
-		return this.getPlayer(player).down[btn] === true;
+		return this.getPlayer(player).down[btn];
 	};
 
 	/**
@@ -357,26 +357,21 @@ export class Gamepads {
 	* @param {Number} btn button index
 	* @param {Number} player player index (`undefined` for "any")
 	*/
-	isUp = (btn: Buttons, player?: number) => !this.isDown(btn, player);
+	isUp = (btn: Buttons, player?: number | string) => !this.isDown(btn, player);
 
 	/**
 	* @returns `true` if `player`'s `btn` is currently down and WAS NOT in previous update
 	* @param {Number} btn button index
 	* @param {Number} player player index (`undefined` for "any")
 	*/
-	isJustDown = (btn: Buttons, player?: number) => {
+	isJustDown = (btn: Buttons, player?: number | string): boolean => {
 		if (btn === undefined) {
 			throw new Error('must specify a button');
 		}
 		if (player === undefined) {
-			for (let i = 0; i < this.players.length; ++i) {
-				if (this.isJustDown(btn, i)) {
-					return true;
-				}
-			}
-			return false;
+			return Object.keys(this.players).some((i) => this.isJustDown(btn, i));
 		}
-		return this.getPlayer(player).justDown[btn] === true;
+		return this.getPlayer(player).justDown[btn];
 	};
 
 	/**
@@ -384,18 +379,13 @@ export class Gamepads {
 	* @param {Number} btn button index
 	* @param {Number} player player index (`undefined` for "any")
 	*/
-	isJustUp = (btn: Buttons, player?: number) => {
+	isJustUp = (btn: Buttons, player?: number | string): boolean => {
 		if (btn === undefined) {
 			throw new Error('must specify a button');
 		}
 		if (player === undefined) {
-			for (let i = 0; i < this.players.length; ++i) {
-				if (this.isJustUp(btn, i)) {
-					return true;
-				}
-			}
-			return false;
+			return Object.keys(this.players).some((i) => this.isJustUp(btn, i));
 		}
-		return this.getPlayer(player).justUp[btn] === true;
+		return this.getPlayer(player).justUp[btn];
 	};
 }

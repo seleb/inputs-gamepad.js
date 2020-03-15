@@ -49,7 +49,10 @@ export declare class Gamepads {
     *
     * defaults to normalizing between the two thresholds */
     interpolate: (value: number) => number;
-    players: GamepadType[];
+    players: {
+        [key: number]: GamepadType;
+        [key: string]: GamepadType;
+    };
     available: boolean;
     pollEveryFrame: boolean;
     connected: boolean;
@@ -70,7 +73,7 @@ export declare class Gamepads {
     *
     * if one doesn't exist, returns an object with gamepad properties reflecting a null state
     */
-    getPlayer: (player: number) => GamepadType;
+    getPlayer: (player: string | number) => GamepadType;
     /**
     * @returns an array representing `length` axes for `player` at `offset`
     *
@@ -82,11 +85,11 @@ export declare class Gamepads {
     * @param {Number} player player index (`undefined` for "sum of all")
     * @param {boolean} prev if `true` uses axis values from previous update
     */
-    getAxes: (offset?: number, length?: number, player?: number, prev?: boolean) => number[];
+    getAxes: (offset?: number, length?: number, player?: string | number | undefined, prev?: boolean) => number[];
     /**
    * @returns equivalent to `getAxes(axis, 1, player, prev)[0]`
    */
-    getAxis: (axis: Axes, player?: number, prev?: boolean) => number;
+    getAxis: (axis: Axes, player?: string | number | undefined, prev?: boolean | undefined) => number;
     /**
     * @returns `true` if `axis` is past `threshold` in `direction`
     * @param {Number} axis axis index
@@ -95,7 +98,7 @@ export declare class Gamepads {
     * @param {Number} player player index (`undefined` for "any")
     * @param {boolean} prev if `true` uses axis values from previous update
     */
-    axisPast: (axis: Axes, threshold: number, direction: 1 | -1, player?: number, prev?: boolean) => boolean;
+    axisPast: (axis: Axes, threshold: number, direction: 1 | -1, player?: string | number | undefined, prev?: boolean | undefined) => boolean;
     /**
     * @returns `true` if `axis` is past `threshold` in `direction` and WAS NOT in previous update
     * @param {Number} axis axis index
@@ -103,35 +106,35 @@ export declare class Gamepads {
     * @param {Number} direction direction (-1|1) (if `undefined`, assumes the sign of `theshold` is the direction (e.g. if `theshold` is -0.5, it will check if the axis is < -0.5))
     * @param {Number} player player index (`undefined` for "any")
     */
-    axisJustPast: (axis: Axes, threshold: number, direction: 1 | -1, player?: number) => boolean;
+    axisJustPast: (axis: Axes, threshold: number, direction: 1 | -1, player?: string | number | undefined) => boolean;
     /**
     * @returns `[x,y]` representing the dpad for `player`
     * @param {Number} player player index (`undefined` for "sum of all")
     */
-    getDpad: (player?: number) => number[];
+    getDpad: (player?: string | number | undefined) => number[];
     /**
     * @returns `true` if `player`'s `btn` is currently down
     * @param {Number} btn button index
     * @param {Number} player player index (`undefined` for "any")
     */
-    isDown: (btn: Buttons, player?: number) => boolean;
+    isDown: (btn: Buttons, player?: string | number | undefined) => boolean;
     /**
     * @returns equivalent to `!isDown(btn, player)`
     * @param {Number} btn button index
     * @param {Number} player player index (`undefined` for "any")
     */
-    isUp: (btn: Buttons, player?: number) => boolean;
+    isUp: (btn: Buttons, player?: string | number | undefined) => boolean;
     /**
     * @returns `true` if `player`'s `btn` is currently down and WAS NOT in previous update
     * @param {Number} btn button index
     * @param {Number} player player index (`undefined` for "any")
     */
-    isJustDown: (btn: Buttons, player?: number) => boolean;
+    isJustDown: (btn: Buttons, player?: string | number | undefined) => boolean;
     /**
     * @returns `true` if `player`'s `btn` is currently NOT down and WAS down in previous update
     * @param {Number} btn button index
     * @param {Number} player player index (`undefined` for "any")
     */
-    isJustUp: (btn: Buttons, player?: number) => boolean;
+    isJustUp: (btn: Buttons, player?: string | number | undefined) => boolean;
 }
 export {};

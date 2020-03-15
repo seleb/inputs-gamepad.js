@@ -60,7 +60,7 @@ var Gamepads = /** @class */ (function () {
             return v;
         };
         // internal vars
-        this.players = [];
+        this.players = {};
         this.available = false;
         this.pollEveryFrame = false;
         this.connected = false;
@@ -70,11 +70,9 @@ var Gamepads = /** @class */ (function () {
         this.pollconnections = function () {
             _this.connected = false;
             // assume existing players' gamepads aren't enabled until they're found
-            for (var i = 0; i < _this.players.length; ++i) {
-                if (_this.players[i]) {
-                    _this.players[i].disabled = true;
-                }
-            }
+            Object.values(_this.players).forEach(function (player) {
+                player.disabled = true;
+            });
             var gps = navigator.getGamepads();
             for (var i = 0; i < gps.length; ++i) {
                 var gp = gps[i];
@@ -99,7 +97,7 @@ var Gamepads = /** @class */ (function () {
                         _this.players[gp.index].disabled = false;
                     }
                     else {
-                        _this.players[gp.index] = null;
+                        delete _this.players[gp.index];
                     }
                 }
             }
@@ -110,17 +108,21 @@ var Gamepads = /** @class */ (function () {
         this.update = function () {
             // store the previous axis values
             // has to be done before pollConnections since that will get the new axis values
-            for (var i = 0; i < _this.players.length; ++i) {
+            Object.keys(_this.players).forEach(function (i) {
+                var _a;
                 var p = _this.getPlayer(i);
-                p.axesPrev = p.original.axes.slice();
-            }
+                if ((_a = p === null || p === void 0 ? void 0 : p.original) === null || _a === void 0 ? void 0 : _a.axes) {
+                    p.axesPrev = p.original.axes.slice();
+                }
+            });
             // poll connections and update gamepad states every frame because chrome's a lazy bum
             if (_this.pollEveryFrame) {
                 _this.pollconnections();
             }
-            for (var i = 0; i < _this.players.length; ++i) {
+            Object.keys(_this.players).forEach(function (i) {
+                var _a;
                 var p = _this.getPlayer(i);
-                if (p && p != null) {
+                if ((_a = p === null || p === void 0 ? void 0 : p.original) === null || _a === void 0 ? void 0 : _a.buttons) {
                     for (var j = 0; j < p.original.buttons.length; ++j) {
                         if (p.original.buttons[j].pressed) {
                             p.justDown[j] = !(p.down[j] === true);
@@ -134,7 +136,7 @@ var Gamepads = /** @class */ (function () {
                         }
                     }
                 }
-            }
+            });
         };
         /**
         * @returns `player`'s gamepad
@@ -142,9 +144,8 @@ var Gamepads = /** @class */ (function () {
         * if one doesn't exist, returns an object with gamepad properties reflecting a null state
         */
         this.getPlayer = function (player) {
-            if (_this.players[player]
-                && _this.players[player].original.connected
-                && !_this.players[player].disabled) {
+            var _a, _b, _c;
+            if (((_b = (_a = _this.players[player]) === null || _a === void 0 ? void 0 : _a.original) === null || _b === void 0 ? void 0 : _b.connected) && !((_c = _this.players[player]) === null || _c === void 0 ? void 0 : _c.disabled)) {
                 return _this.players[player];
             }
             return nullGamepad;
@@ -169,29 +170,31 @@ var Gamepads = /** @class */ (function () {
                 axes[i] = 0;
             }
             if (player === undefined) {
-                for (var i = 0; i < _this.players.length; ++i) {
+                Object.keys(_this.players).forEach(function (i) {
                     var a = _this.getAxes(offset, length, i, prev);
                     for (var j = 0; j < a.length; ++j) {
                         axes[j] += a[j];
                     }
-                }
+                });
             }
             else {
                 var p = _this.getPlayer(player);
-                var a = prev ? p.axesPrev : p.original.axes;
-                a = Object.values(a).slice(offset, offset + length);
-                for (var i = 0; i < a.length; ++i) {
-                    if (Math.abs(a[i]) < _this.deadZone) {
-                        axes[i] += 0;
-                    }
-                    else if (Math.abs(1.0 - a[i]) < _this.snapZone) {
-                        axes[i] += 1;
-                    }
-                    else if (Math.abs(-1.0 - a[i]) < _this.snapZone) {
-                        axes[i] -= 1;
-                    }
-                    else {
-                        axes[i] += Math.sign(a[i]) * _this.interpolate(Math.abs(a[i]));
+                if (p === null || p === void 0 ? void 0 : p.original) {
+                    var axesSource = prev ? p.axesPrev : p.original.axes;
+                    var a = Object.values(axesSource).slice(offset, offset + length);
+                    for (var i = 0; i < a.length; ++i) {
+                        if (Math.abs(a[i]) < _this.deadZone) {
+                            axes[i] += 0;
+                        }
+                        else if (Math.abs(1.0 - a[i]) < _this.snapZone) {
+                            axes[i] += 1;
+                        }
+                        else if (Math.abs(-1.0 - a[i]) < _this.snapZone) {
+                            axes[i] -= 1;
+                        }
+                        else {
+                            axes[i] += Math.sign(a[i]) * _this.interpolate(Math.abs(a[i]));
+                        }
                     }
                 }
             }
@@ -236,11 +239,11 @@ var Gamepads = /** @class */ (function () {
             var x = 0;
             var y = 0;
             if (player === undefined) {
-                for (var i = 0; i < _this.players.length; ++i) {
+                Object.keys(_this.players).forEach(function (i) {
                     var _a = _this.getDpad(i), ix = _a[0], iy = _a[1];
                     x += ix;
                     y += iy;
-                }
+                });
             }
             else {
                 if (_this.isDown(Buttons.DPAD_RIGHT, player)) {
@@ -268,14 +271,9 @@ var Gamepads = /** @class */ (function () {
                 throw new Error('must specify a button');
             }
             if (player === undefined) {
-                for (var i = 0; i < _this.players.length; ++i) {
-                    if (_this.isDown(btn, i)) {
-                        return true;
-                    }
-                }
-                return false;
+                return Object.keys(_this.players).some(function (i) { return _this.isDown(btn, i); });
             }
-            return _this.getPlayer(player).down[btn] === true;
+            return _this.getPlayer(player).down[btn];
         };
         /**
         * @returns equivalent to `!isDown(btn, player)`
@@ -293,14 +291,9 @@ var Gamepads = /** @class */ (function () {
                 throw new Error('must specify a button');
             }
             if (player === undefined) {
-                for (var i = 0; i < _this.players.length; ++i) {
-                    if (_this.isJustDown(btn, i)) {
-                        return true;
-                    }
-                }
-                return false;
+                return Object.keys(_this.players).some(function (i) { return _this.isJustDown(btn, i); });
             }
-            return _this.getPlayer(player).justDown[btn] === true;
+            return _this.getPlayer(player).justDown[btn];
         };
         /**
         * @returns `true` if `player`'s `btn` is currently NOT down and WAS down in previous update
@@ -312,15 +305,11 @@ var Gamepads = /** @class */ (function () {
                 throw new Error('must specify a button');
             }
             if (player === undefined) {
-                for (var i = 0; i < _this.players.length; ++i) {
-                    if (_this.isJustUp(btn, i)) {
-                        return true;
-                    }
-                }
-                return false;
+                return Object.keys(_this.players).some(function (i) { return _this.isJustUp(btn, i); });
             }
-            return _this.getPlayer(player).justUp[btn] === true;
+            return _this.getPlayer(player).justUp[btn];
         };
+        // @ts-ignore
         if (navigator.getGamepads) {
             this.available = true;
         }
