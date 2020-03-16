@@ -1,7 +1,6 @@
 var Buttons;
 (function (Buttons) {
     // XBOX360 wired controller configuration
-    /* eslint-disable no-unused-vars */
     Buttons[Buttons["A"] = 0] = "A";
     Buttons[Buttons["X"] = 2] = "X";
     Buttons[Buttons["B"] = 1] = "B";
@@ -18,16 +17,13 @@ var Buttons;
     Buttons[Buttons["DPAD_DOWN"] = 13] = "DPAD_DOWN";
     Buttons[Buttons["DPAD_LEFT"] = 14] = "DPAD_LEFT";
     Buttons[Buttons["DPAD_RIGHT"] = 15] = "DPAD_RIGHT";
-    /* eslint-enable no-unused-vars */
 })(Buttons || (Buttons = {}));
 var Axes;
 (function (Axes) {
-    /* eslint-disable no-unused-vars */
     Axes[Axes["LSTICK_H"] = 0] = "LSTICK_H";
     Axes[Axes["LSTICK_V"] = 1] = "LSTICK_V";
     Axes[Axes["RSTICK_H"] = 2] = "RSTICK_H";
     Axes[Axes["RSTICK_V"] = 3] = "RSTICK_V";
-    /* eslint-enable no-unused-vars */
 })(Axes || (Axes = {}));
 var nullGamepad = {
     original: {
@@ -309,6 +305,7 @@ var Gamepads = /** @class */ (function () {
             }
             return _this.getPlayer(player).justUp[btn];
         };
+        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
         // @ts-ignore
         if (navigator.getGamepads) {
             this.available = true;
@@ -318,7 +315,6 @@ var Gamepads = /** @class */ (function () {
             this.available = true;
         }
         if (this.available) {
-            console.log('Gamepad API available');
             if (navigator.userAgent.includes('Firefox')) {
                 // listen to connection events for firefox
                 window.addEventListener('gamepadconnected', this.pollconnections.bind(this));
@@ -327,9 +323,6 @@ var Gamepads = /** @class */ (function () {
             else {
                 this.pollEveryFrame = true;
             }
-        }
-        else {
-            console.error('Gamepad API not available');
         }
     }
     return Gamepads;

@@ -6,7 +6,6 @@ declare global {
 
 export enum Buttons {
 	// XBOX360 wired controller configuration
-	/* eslint-disable no-unused-vars */
 	A = 0,
 	X = 2,
 	B = 1,
@@ -23,16 +22,13 @@ export enum Buttons {
 	DPAD_DOWN = 13,
 	DPAD_LEFT = 14,
 	DPAD_RIGHT = 15
-	/* eslint-enable no-unused-vars */
 }
 
 export enum Axes {
-	/* eslint-disable no-unused-vars */
 	LSTICK_H = 0,
 	LSTICK_V = 1,
 	RSTICK_H = 2,
 	RSTICK_V = 3
-	/* eslint-enable no-unused-vars */
 }
 
 type EnumMap<T extends string | number | symbol, V> = {
@@ -73,7 +69,7 @@ export class Gamepads {
 	/** axis values between `deadZone` and `snapZone` will be run through this function
 	*
 	* defaults to normalizing between the two thresholds */
-	interpolate = (value: number) => {
+	interpolate = (value: number): number => {
 		const v = Math.max(
 			0,
 			Math.min(
@@ -98,6 +94,7 @@ export class Gamepads {
 	* initialize gamepads
 	*/
 	constructor() {
+		// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
 		// @ts-ignore
 		if (navigator.getGamepads) {
 			this.available = true;
@@ -107,7 +104,6 @@ export class Gamepads {
 		}
 
 		if (this.available) {
-			console.log('Gamepad API available');
 			if (navigator.userAgent.includes('Firefox')) {
 				// listen to connection events for firefox
 				window.addEventListener(
@@ -121,15 +117,13 @@ export class Gamepads {
 			} else {
 				this.pollEveryFrame = true;
 			}
-		} else {
-			console.error('Gamepad API not available');
 		}
 	}
 
 	/**
 	* update gamepads (clears arrays, polls connections, etc.)
 	*/
-	pollconnections = () => {
+	readonly pollconnections = (): void => {
 		this.connected = false;
 
 		// assume existing players' gamepads aren't enabled until they're found
@@ -168,7 +162,7 @@ export class Gamepads {
 	/**
 	* update gamepads (clears arrays, polls connections, etc.)
 	*/
-	update = () => {
+	readonly update = (): void => {
 		// store the previous axis values
 		// has to be done before pollConnections since that will get the new axis values
 		Object.keys(this.players).forEach((i) => {
@@ -206,7 +200,7 @@ export class Gamepads {
 	*
 	* if one doesn't exist, returns an object with gamepad properties reflecting a null state
 	*/
-	getPlayer = (player: number | string): GamepadType => {
+	readonly getPlayer = (player: number | string): GamepadType => {
 		if (
 			this.players[player]?.original?.connected
 			&& !this.players[player]?.disabled
@@ -227,7 +221,7 @@ export class Gamepads {
 	* @param {Number} player player index (`undefined` for "sum of all")
 	* @param {boolean} prev if `true` uses axis values from previous update
 	*/
-	getAxes = (offset = 0, length = 2, player?: number | string, prev = false) => {
+	readonly getAxes = (offset = 0, length = 2, player?: number | string, prev = false): number[] => {
 		const axes: number[] = [];
 		for (let i = 0; i < length; ++i) {
 			axes[i] = 0;
@@ -263,7 +257,7 @@ export class Gamepads {
 	/**
    * @returns equivalent to `getAxes(axis, 1, player, prev)[0]`
    */
-	getAxis = (axis: Axes, player?: number | string, prev?: boolean) => this.getAxes(axis, 1, player, prev)[0];
+	readonly getAxis = (axis: Axes, player?: number | string, prev?: boolean): number => this.getAxes(axis, 1, player, prev)[0];
 
 	/**
 	* @returns `true` if `axis` is past `threshold` in `direction`
@@ -273,13 +267,13 @@ export class Gamepads {
 	* @param {Number} player player index (`undefined` for "any")
 	* @param {boolean} prev if `true` uses axis values from previous update
 	*/
-	axisPast = (
+	readonly axisPast = (
 		axis: Axes,
 		threshold: number,
 		direction: -1 | 1,
 		player?: number | string,
 		prev?: boolean,
-	) => {
+	): boolean => {
 		if (!threshold) {
 			throw new Error('must specify a non-zero threshold');
 		}
@@ -299,23 +293,23 @@ export class Gamepads {
 	* @param {Number} direction direction (-1|1) (if `undefined`, assumes the sign of `theshold` is the direction (e.g. if `theshold` is -0.5, it will check if the axis is < -0.5))
 	* @param {Number} player player index (`undefined` for "any")
 	*/
-	axisJustPast = (
+	readonly axisJustPast = (
 		axis: Axes,
 		threshold: number,
 		direction: -1 | 1,
 		player?: number | string,
-	) => this.axisPast(axis, threshold, direction, player, false)
+	): boolean => this.axisPast(axis, threshold, direction, player, false)
 		&& !this.axisPast(axis, threshold, direction, player, true);
 
 	/**
 	* @returns `[x,y]` representing the dpad for `player`
 	* @param {Number} player player index (`undefined` for "sum of all")
 	*/
-	getDpad = (player?: number | string) => {
+	readonly getDpad = (player?: number | string): [number, number] => {
 		let x = 0;
 		let y = 0;
 		if (player === undefined) {
-			Object.keys(this.players).forEach(i => {
+			Object.keys(this.players).forEach((i) => {
 				const [ix, iy] = this.getDpad(i);
 				x += ix;
 				y += iy;
@@ -342,7 +336,7 @@ export class Gamepads {
 	* @param {Number} btn button index
 	* @param {Number} player player index (`undefined` for "any")
 	*/
-	isDown = (btn: Buttons, player?: number | string): boolean => {
+	readonly isDown = (btn: Buttons, player?: number | string): boolean => {
 		if (btn === undefined) {
 			throw new Error('must specify a button');
 		}
@@ -357,14 +351,14 @@ export class Gamepads {
 	* @param {Number} btn button index
 	* @param {Number} player player index (`undefined` for "any")
 	*/
-	isUp = (btn: Buttons, player?: number | string) => !this.isDown(btn, player);
+	readonly isUp = (btn: Buttons, player?: number | string): boolean => !this.isDown(btn, player);
 
 	/**
 	* @returns `true` if `player`'s `btn` is currently down and WAS NOT in previous update
 	* @param {Number} btn button index
 	* @param {Number} player player index (`undefined` for "any")
 	*/
-	isJustDown = (btn: Buttons, player?: number | string): boolean => {
+	readonly isJustDown = (btn: Buttons, player?: number | string): boolean => {
 		if (btn === undefined) {
 			throw new Error('must specify a button');
 		}
@@ -379,7 +373,7 @@ export class Gamepads {
 	* @param {Number} btn button index
 	* @param {Number} player player index (`undefined` for "any")
 	*/
-	isJustUp = (btn: Buttons, player?: number | string): boolean => {
+	readonly isJustUp = (btn: Buttons, player?: number | string): boolean => {
 		if (btn === undefined) {
 			throw new Error('must specify a button');
 		}
