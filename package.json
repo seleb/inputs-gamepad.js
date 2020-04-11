@@ -1,6 +1,6 @@
 {
 	"name": "input-gamepads.js",
-	"version": "3.0.3",
+	"version": "3.0.4",
 	"description": "Wrapper for HTML5 Gamepad API",
 	"types": "./dist/index.d.ts",
 	"main": "./dist/index.js",
